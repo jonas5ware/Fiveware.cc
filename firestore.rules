@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS ---
+
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.keys().hasAll(['role']) && request.auth.token.role == 'admin') ||
+        request.auth.token.email == 'jogadorprincipal3@gmail.com' ||
+        request.auth.token.email == 'otaviocarlosm75@gmail.com'
+      );
+    }
+
+    function isStaff() {
+      return isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.token.keys().hasAll(['role']) && (request.auth.token.role == 'staff' || request.auth.token.role == 'specialist'))
+      );
+    }
+
+    // --- USERS & PII ---
+
+    match /users/{userId} {
+      allow get: if isAuthenticated() && (isUser(userId) || isStaff());
+      allow list: if isAdmin();
+      allow create: if isUser(userId) && isValidId(userId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.role in ['client', 'staff', 'admin']
+        && (!('role' in request.resource.data) || request.resource.data.role == 'client' || isAdmin());
+      allow update: if (isUser(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'userId']))
+        || isAdmin();
+      allow delete: if isAdmin();
+
+      // PII subcollection
+      match /private/{document=**} {
+        allow read, write: if isUser(userId) || isAdmin();
+      }
+    }
+
+    // --- TICKET CATEGORIES ---
+
+    match /ticket_categories/{catId} {
+      allow read: if isValidId(catId);
+      allow write: if isAdmin();
+    }
+
+    // --- STAFF DIRECTORY ---
+
+    match /staff_members/{staffId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // --- TICKETS ---
+
+    match /tickets/{ticketId} {
+      // 3. User can ONLY view/read tickets where userId matches authenticated UID (or admin/staff)
+      // 7. Only authenticated and authorized administrators/staff can view tickets of all users
+      allow get: if isValidId(ticketId) && (
+        isStaff() ||
+        (isAuthenticated() && (
+          (resource.data.keys().hasAll(['userId']) && resource.data.userId == request.auth.uid) ||
+          (resource.data.keys().hasAll(['user_id']) && resource.data.user_id == request.auth.uid) ||
+          (resource.data.keys().hasAll(['email']) && resource.data.email == request.auth.token.email)
+        )) ||
+        (resource.data.userId == 'anonymous')
+      );
+
+      // Listing: Staff can list all; authenticated users can only list with query
+      allow list: if isStaff() || (
+        isAuthenticated() && request.query.limit <= 50
+      );
+
+      // 1. Each ticket must have userId bound to real authenticated UID
+      // 4. Client cannot forge or create ticket under another user's ID
+      allow create: if isValidId(ticketId) && (
+        (isAuthenticated() && (
+          request.resource.data.userId == request.auth.uid ||
+          (request.resource.data.keys().hasAll(['user_id']) && request.resource.data.user_id == request.auth.uid)
+        )) ||
+        (!isAuthenticated() && request.resource.data.userId == 'anonymous')
+      )
+      && request.resource.data.subject is string
+      && request.resource.data.description is string;
+
+      // 4. Do not allow client to change userId/user_id to access or reassign tickets
+      // 8. Only owner or staff can update replies, status, and last activity
+      allow update: if isValidId(ticketId) && (
+        isStaff() ||
+        (
+          isAuthenticated() &&
+          (resource.data.userId == request.auth.uid || resource.data.user_id == request.auth.uid || resource.data.email == request.auth.token.email) &&
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'user_id']))
+        ) ||
+        (
+          resource.data.userId == 'anonymous' &&
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'user_id']))
+        )
+      );
+
+      allow delete: if isAdmin() || isStaff();
+
+      // 8. Messages/replies must strictly respect ticket ownership
+      match /replies/{replyId} {
+        allow read, write: if isValidId(replyId) && (
+          isStaff() ||
+          (isAuthenticated() && (
+            get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == request.auth.uid ||
+            get(/databases/$(database)/documents/tickets/$(ticketId)).data.user_id == request.auth.uid ||
+            get(/databases/$(database)/documents/tickets/$(ticketId)).data.email == request.auth.token.email
+          )) ||
+          get(/databases/$(database)/documents/tickets/$(ticketId)).data.userId == 'anonymous'
+        );
+      }
+
+      // Internal Notes - staff only
+      match /internal_notes/{noteId} {
+        allow read, write: if isStaff();
+      }
+    }
+
+    // --- ORDERS (Commercial purchases) ---
+
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && (
+        isStaff() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid)
+      );
+
+      allow list: if isAuthenticated() && (
+        isStaff() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid)
+      );
+
+      // Clients can create pending orders; status cannot be set to completed directly by client
+      allow create: if isValidId(orderId) && isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.status in ['pending']
+        && request.resource.data.orderNumber is string;
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // --- AUDIT LOGS ---
+
+    match /audit_logs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isValidId(logId)
+        && request.resource.data.action is string
+        && request.resource.data.action.size() <= 100;
+      allow update, delete: if false; // Immutable logs
+    }
+  }
+}

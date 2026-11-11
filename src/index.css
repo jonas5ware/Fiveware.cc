@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --devcore-bg: #09090b;
+    --devcore-surface: #121215;
+    --devcore-card: #18181b;
+    --devcore-border: rgba(255, 255, 255, 0.08);
+    --devcore-accent: #15803d;
+    --devcore-accent-hover: #166534;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--devcore-bg);
+    color: #f4f4f5;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Syne', system-ui, -apple-system, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Smooth, neutral surface utilities - zero artificial neon glow */
+.surface-matte {
+  background-color: rgba(24, 24, 27, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.surface-matte:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.smooth-transition {
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle, smooth card lift */
+.card-smooth {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-smooth:hover {
+  transform: translateY(-2px);
+}
+
+/* Minimalist, neutral scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+

@@ -1,0 +1,460 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an authenticated user profile in the Fiveware system.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique Firebase Authentication UID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full display name of the user."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar URL from Google or custom profile."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["client", "staff", "admin"],
+          "description": "Security role for attribute-based access control."
+        },
+        "emailVerified": {
+          "type": "boolean",
+          "description": "Whether the user's primary email address is verified."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account registration timestamp."
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Most recent session authentication timestamp."
+        }
+      },
+      "required": ["userId", "email", "role", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private personally identifiable information (PII) isolated per user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Corresponding user UID."
+        },
+        "discordTag": {
+          "type": "string",
+          "description": "User Discord handle for support sync."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Contact number if supplied."
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "Last recorded IP address for anomaly detection."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last profile update timestamp."
+        }
+      },
+      "required": ["userId"]
+    },
+    "TicketCategory": {
+      "title": "TicketCategory",
+      "description": "Classification category for routing tickets to specialized staff.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Category identifier (e.g. purchase_issues, payments, refunds)."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of category."
+        },
+        "description": {
+          "type": "string",
+          "description": "Scope or instructions for this category."
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color code for UI badges."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether active and visible in ticket creation modal."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        }
+      },
+      "required": ["id", "name", "isActive"]
+    },
+    "StaffMember": {
+      "title": "StaffMember",
+      "description": "Employee or specialist with designated support permissions.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique staff member identifier."
+        },
+        "name": {
+          "type": "string",
+          "description": "Staff member full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Staff corporate email."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "staff", "specialist"],
+          "description": "Employee role."
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "canReply": { "type": "boolean" },
+            "canChangeStatus": { "type": "boolean" },
+            "canAssignTickets": { "type": "boolean" },
+            "canManageInternalNotes": { "type": "boolean" },
+            "canManageCategories": { "type": "boolean" }
+          },
+          "required": ["canReply", "canChangeStatus", "canAssignTickets", "canManageInternalNotes"]
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether active on the support team."
+        },
+        "assignedTicketsCount": {
+          "type": "number",
+          "description": "Active tickets currently assigned to this staff member."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Enrolment timestamp."
+        }
+      },
+      "required": ["id", "name", "email", "role", "permissions", "active"]
+    },
+    "Ticket": {
+      "title": "Ticket",
+      "description": "Support enquiry or technical issue submitted by a client.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ticket document identifier."
+        },
+        "protocol": {
+          "type": "string",
+          "description": "Human-readable reference number (e.g. TICKET-000001)."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID or 'anonymous' if guest."
+        },
+        "name": {
+          "type": "string",
+          "description": "Client name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Client email address."
+        },
+        "subject": {
+          "type": "string",
+          "description": "Title or subject of the enquiry."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category identifier (purchase_issues, payments, undelivered_products, technical_issues, refunds, other)."
+        },
+        "categoryName": {
+          "type": "string",
+          "description": "Human-readable category label."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "normal", "high", "urgent", "medium", "critical", "baixa", "media", "alta", "critica"],
+          "description": "Priority tier of the support request."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed enquiry description."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "in_progress", "waiting_customer", "resolved", "closed", "in_review", "responded", "aberto", "em_analise", "respondido", "fechado"],
+          "description": "Current lifecycle status."
+        },
+        "assignedStaffId": {
+          "type": "string",
+          "description": "Identifier of the staff member assigned to this ticket."
+        },
+        "assignedStaffName": {
+          "type": "string",
+          "description": "Name of the assigned staff member."
+        },
+        "discordTag": {
+          "type": "string",
+          "description": "Associated Discord username."
+        },
+        "unreadByCustomer": {
+          "type": "boolean",
+          "description": "Flag for customer unread messages."
+        },
+        "unreadByStaff": {
+          "type": "boolean",
+          "description": "Flag for staff unread messages."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        },
+        "lastActivityAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of most recent reply or status change."
+        },
+        "closedReason": {
+          "type": "string",
+          "description": "Reason for ticket termination."
+        }
+      },
+      "required": ["id", "protocol", "userId", "name", "email", "subject", "category", "priority", "description", "status", "createdAt"]
+    },
+    "TicketReply": {
+      "title": "TicketReply",
+      "description": "Individual communication exchange within a ticket.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique reply message identifier."
+        },
+        "ticketId": {
+          "type": "string",
+          "description": "Parent ticket identifier."
+        },
+        "sender": {
+          "type": "string",
+          "enum": ["user", "admin", "staff", "system"],
+          "description": "Sender role."
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Display name of message author."
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Author UID or staff ID."
+        },
+        "message": {
+          "type": "string",
+          "description": "Text body of the reply."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Dispatch timestamp."
+        }
+      },
+      "required": ["id", "ticketId", "sender", "senderName", "message", "timestamp"]
+    },
+    "InternalNote": {
+      "title": "InternalNote",
+      "description": "Confidential staff-only internal memorandum strictly blocked from clients.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique internal note identifier."
+        },
+        "ticketId": {
+          "type": "string",
+          "description": "Associated ticket identifier."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Staff author identifier."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Staff author display name."
+        },
+        "authorRole": {
+          "type": "string",
+          "enum": ["admin", "staff", "specialist"],
+          "description": "Author staff role."
+        },
+        "content": {
+          "type": "string",
+          "description": "Confidential internal note text."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp note was recorded."
+        }
+      },
+      "required": ["id", "authorId", "authorName", "content", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Authoritative software purchase order record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique order identifier."
+        },
+        "orderNumber": {
+          "type": "string",
+          "description": "Public receipt number (e.g. FW-ORD-9102)."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Client user UID."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Billing contact email."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Internal product catalogue identifier."
+        },
+        "productName": {
+          "type": "string",
+          "description": "Name of purchased software item."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Authoritative price in primary currency."
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency code (BRL, USD, GBP)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "completed", "cancelled", "refunded"],
+          "description": "Payment and fulfilment status."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Method of payment (Pix, PayPal, Revolut, Crypto)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Order creation timestamp."
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Payment confirmation timestamp."
+        }
+      },
+      "required": ["id", "orderNumber", "userId", "userEmail", "productId", "productName", "amount", "currency", "status", "createdAt"]
+    },
+    "SecurityAuditLog": {
+      "title": "SecurityAuditLog",
+      "description": "Immutable security event record for intrusion detection and compliance.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique audit log identifier."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Subject user UID or 'system' / 'anonymous'."
+        },
+        "action": {
+          "type": "string",
+          "description": "Security action performed (e.g. auth.google_signin, auth.failed_attempt, ticket.create, order.checkout)."
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "Client IP address or simulated identifier."
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "Browser user agent string."
+        },
+        "details": {
+          "type": "string",
+          "description": "Structured details or context."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Event timestamp."
+        }
+      },
+      "required": ["id", "action", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Public user profile and account tier."
+    },
+    "/users/{userId}/private/profile": {
+      "schema": "UserProfile",
+      "description": "Isolated confidential user data accessible solely by user or super-admin."
+    },
+    "/ticket_categories/{catId}": {
+      "schema": "TicketCategory",
+      "description": "Global support ticket categories managed by administrators."
+    },
+    "/staff_members/{staffId}": {
+      "schema": "StaffMember",
+      "description": "Staff roster and granular permission profiles."
+    },
+    "/tickets/{ticketId}": {
+      "schema": "Ticket",
+      "description": "Support tickets submitted by clients or managed by staff."
+    },
+    "/tickets/{ticketId}/replies/{replyId}": {
+      "schema": "TicketReply",
+      "description": "Public replies inside a support ticket."
+    },
+    "/tickets/{ticketId}/internal_notes/{noteId}": {
+      "schema": "InternalNote",
+      "description": "Confidential staff internal notes completely isolated from customer view."
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Commercial software purchase records with backend price integrity."
+    },
+    "/audit_logs/{logId}": {
+      "schema": "SecurityAuditLog",
+      "description": "System security audit and activity log."
+    }
+  }
+}

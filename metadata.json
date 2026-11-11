@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Fiveware.cc",
+  "description": "Plataforma de alta performance para desenvolvedores: cursos avançados, ecossistemas de código, templates de ponta e produtos digitais com estética dark futurista.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
