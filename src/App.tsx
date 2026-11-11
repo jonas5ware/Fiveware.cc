@@ -89,7 +89,9 @@ function MainAppContent() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.some((c: TicketCategory) => c.id === 'general')) {
-          return parsed;
+          const filtered = parsed.filter((c: TicketCategory) => c.id !== 'refunds' && c.name?.toLowerCase() !== 'refunds');
+          localStorage.setItem('devcore_categories', JSON.stringify(filtered));
+          return filtered;
         }
       }
       return INITIAL_TICKET_CATEGORIES;
@@ -426,6 +428,22 @@ function MainAppContent() {
         }
       } catch {}
     }
+
+    // Save order record for Pedidos view
+    try {
+      const existingOrders = JSON.parse(localStorage.getItem('fiveware_user_orders') || '[]');
+      const newOrder = {
+        id: `FW-${Date.now().toString(36).toUpperCase()}`,
+        productId,
+        productName,
+        price,
+        status: 'confirmed',
+        date: new Date().toISOString(),
+        email: cleanEmail,
+        key: `FW-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+      };
+      localStorage.setItem('fiveware_user_orders', JSON.stringify([newOrder, ...existingOrders]));
+    } catch {}
   };
 
   const handleLogout = async () => {

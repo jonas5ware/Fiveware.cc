@@ -127,22 +127,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           className="pt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-center text-xs text-zinc-400 font-normal select-none"
         >
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white font-mono text-sm tabular-nums">420+</span>
+            <span className="font-bold text-white font-mono text-sm tabular-nums">+200</span>
             <span>Clients</span>
           </div>
 
           <span aria-hidden="true" className="text-zinc-700">·</span>
 
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white font-mono text-sm tabular-nums">160+</span>
+            <span className="font-bold text-white font-mono text-sm tabular-nums">89</span>
             <span>5★ Reviews</span>
-          </div>
-
-          <span aria-hidden="true" className="text-zinc-700">·</span>
-
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white font-mono text-sm tabular-nums">2+</span>
-            <span>Years in Operation</span>
           </div>
         </motion.div>
 

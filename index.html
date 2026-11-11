@@ -9,11 +9,17 @@
     <meta property="og:description" content="Fiveware.cc: bespoke high-performance optimisation software, FiveM Citizens, latency stabilisation, and private system utilities for Windows." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/png" href="/fiveware-ghost.png" />
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="preload" as="image" href="/ticket-bg.jpg" fetchpriority="high">
+    <script>
+      // Gracefully prevent harmless Vite dev WebSocket/HMR disconnect errors from bubbling
+      window.addEventListener('error', function(event) {
+        if (event.filename && event.filename.includes('@vite/client')) {
+          event.stopImmediatePropagation();
+        }
+      }, true);
+    </script>
   </head>
   <body class="bg-[#09090b] text-[#f4f4f5] antialiased selection:bg-zinc-800 selection:text-white overflow-x-hidden min-h-screen">
     <div id="root"></div>

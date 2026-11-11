@@ -143,7 +143,7 @@ export const SupportSection: React.FC<SupportSectionProps> = ({
   const [showDiscordModal, setShowDiscordModal] = useState(false);
   const [discordInput, setDiscordInput] = useState('');
 
-  const activeCategories = categories.filter(c => c.isActive !== false);
+  const activeCategories = categories.filter(c => c.isActive !== false && c.id !== 'refunds' && c.name?.toLowerCase() !== 'refunds');
   const selectedCategoryObj = activeCategories.find(c => c.id === category) || activeCategories[0] || {
     id: 'general',
     name: 'General'
@@ -500,8 +500,8 @@ export const SupportSection: React.FC<SupportSectionProps> = ({
 
             {/* Ticket Form Panel ("balões do ticket") in British English - always visible */}
             <form onSubmit={handleSubmit} className="rounded-2xl border border-zinc-800/90 bg-[#0c0d12]/92 backdrop-blur-md p-5 sm:p-7 shadow-2xl space-y-4 text-left">
-              {/* Authenticated / Visitor Status Strip */}
-              {isRegisteredUser ? (
+              {/* Authenticated User Status Strip */}
+              {isRegisteredUser && (
                 <div className="flex items-center justify-between pb-3 border-b border-zinc-800/70 text-xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -513,20 +513,6 @@ export const SupportSection: React.FC<SupportSectionProps> = ({
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 text-sky-300 border border-zinc-700">
                     Cargo: {user?.role ? user.role.toUpperCase() : 'MEMBER'}
                   </span>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-amber-950/30 border border-amber-600/30 text-xs">
-                  <div className="flex items-center gap-2 text-amber-200">
-                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Cadastro obrigatório para abrir tickets de suporte e falar com a equipe.</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onOpenLoginModal}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs transition-colors cursor-pointer shrink-0 shadow-sm"
-                  >
-                    Entrar / Criar Conta
-                  </button>
                 </div>
               )}
 
@@ -757,9 +743,9 @@ export const SupportSection: React.FC<SupportSectionProps> = ({
                       onChange={(e) => setProductName(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-zinc-700"
                     >
-                      <option value="Private Solo Uefi, OS">Private Solo Uefi, OS (R$ 999,99 / $180 USD)</option>
-                      <option value="Private Group Uefi, OS">Private Group Uefi, OS (R$ 1.999,99 / $360 USD)</option>
-                      <option value="VIP Private Slot">VIP Private Slot</option>
+                      <option value="Advanced Slot">Advanced Slot (€85.00)</option>
+                      <option value="Exclusive Slot">Exclusive Slot (€125.00)</option>
+                      <option value="Private Solo Uefi, OS">Private Solo Uefi, OS (€185.00)</option>
                       <option value="Other Product">Other Product</option>
                     </select>
                   </div>

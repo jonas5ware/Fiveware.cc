@@ -40,14 +40,6 @@ export const INITIAL_TICKET_CATEGORIES: TicketCategory[] = [
     color: '#60a5fa',
     isActive: true,
     createdAt: '2026-01-01T00:00:00.000Z'
-  },
-  {
-    id: 'refunds',
-    name: 'Refunds',
-    description: 'Refund requests, store credit eligibility, transaction cancellations',
-    color: '#f87171',
-    isActive: true,
-    createdAt: '2026-01-01T00:00:00.000Z'
   }
 ];
 

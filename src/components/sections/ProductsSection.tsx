@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   Crown, 
@@ -10,11 +10,23 @@ import {
   CreditCard,
   Lock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 import { NavTabId } from '../layout/Navbar';
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../common/Toast';
+
+const DiscordIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+  </svg>
+);
 
 interface ProductsSectionProps {
   onNavigateTab?: (tab: NavTabId) => void;
@@ -46,10 +58,22 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   onPurchaseCompleted
 }) => {
   const { toast } = useToast();
+  const [activeBalloonProductId, setActiveBalloonProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'crypto' | 'card'>('pix');
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+
+  // Close balloon when pressing Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveBalloonProductId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const isUserAuthenticated = Boolean(user && user.email);
 
@@ -79,7 +103,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
       features: [
         'Lifetime software access',
         'Priority updates',
-        'Remote setup included'
+        'Connected to another device'
       ]
     },
     {
@@ -87,13 +111,13 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
       name: 'Private Solo Uefi, OS',
       tag: 'Solo UEFI',
       desc: 'Dedicated private solo remote slot engineered with direct UEFI OS architecture.',
-      price: '$185.00',
+      price: '€185.00',
       buttonText: 'Buy now',
       icon: ShieldCheck,
       features: [
         'Lifetime software access',
         'Priority updates',
-        'Remote setup included'
+        'Connected to another device'
       ]
     }
   ];
@@ -137,38 +161,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
   return (
     <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20 text-left">
-      {/* Top Header */}
+      {/* Top Header - Ultra-clean & Minimalist */}
       <div className="flex flex-col items-center text-center space-y-2 mb-10">
-        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono uppercase tracking-wider text-sky-400">
-          <Sparkles className="w-3 h-3" />
-          <span>Software & Optimisation</span>
-        </div>
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display tracking-tight text-white">
-          Fiveware.cc Products
+          Fiveware Products
         </h2>
         <p className="text-xs sm:text-sm text-zinc-400 max-w-lg leading-relaxed">
-          Software and utilities engineered for peak performance, rock-solid stability and genuine system responsiveness.
+          High-performance software engineered with direct UEFI OS architecture and zero detection footprint.
         </p>
-
-        {/* User Status Bar */}
-        {isUserAuthenticated ? (
-          <div className="pt-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-600/30 text-xs text-emerald-300 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>Conectado como <strong>{user?.name}</strong> ({discordUser?.username}) · Cargo: [{user?.role ? user.role.toUpperCase() : 'MEMBER'}]</span>
-            </span>
-          </div>
-        ) : (
-          <div className="pt-2">
-            <button
-              onClick={onRequireAuth}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/40 border border-amber-600/40 text-xs text-amber-300 font-medium hover:bg-amber-900/50 transition-colors cursor-pointer"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Registro obrigatório com Discord para comprar</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Grid of Products matching exactly IMG_2641 and IMG_2642 */}
@@ -177,7 +177,9 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
           return (
             <div
               key={item.id}
-              className="relative flex flex-col justify-between p-6 sm:p-7 rounded-[24px] bg-[#090a0f] border border-zinc-800/80 transition-all hover:border-zinc-700/80 shadow-2xl"
+              className={`relative flex flex-col justify-between p-6 sm:p-7 rounded-[24px] bg-[#090a0f] border border-zinc-800/80 transition-all hover:border-zinc-700/80 shadow-2xl ${
+                activeBalloonProductId === item.id ? 'z-30' : 'z-10'
+              }`}
             >
               <div>
                 {/* Title */}
@@ -185,13 +187,13 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                   {item.name}
                 </h3>
 
-                {/* Price and one-time label */}
+                {/* Price and Lifetime label */}
                 <div className="mt-4 flex items-baseline gap-2">
                   <span className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
                     {item.price}
                   </span>
                   <span className="text-sm text-zinc-400 font-normal">
-                    one-time
+                    Lifetime
                   </span>
                 </div>
 
@@ -206,14 +208,77 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                 </ul>
               </div>
 
-              {/* Action Button */}
-              <button
-                type="button"
-                onClick={() => handleInitiatePurchase(item)}
-                className="w-full py-3 px-4 rounded-xl bg-[#0d0e15] hover:bg-[#161722] active:bg-[#1c1e2b] text-white border border-zinc-800/90 font-medium text-sm transition-all duration-200 cursor-pointer shadow-sm flex items-center justify-center"
-              >
-                {item.buttonText || 'Buy now'}
-              </button>
+              {/* Action Button & Mini Balão Minimalista */}
+              <div className="relative w-full">
+                <AnimatePresence>
+                  {activeBalloonProductId === item.id && (
+                    <>
+                      {/* Invisible backdrop to dismiss on click outside */}
+                      <div
+                        className="fixed inset-0 z-40 cursor-default"
+                        onClick={() => setActiveBalloonProductId(null)}
+                      />
+
+                      {/* Mini Balão Minimalista: Somente o balão e as 2 caixinhas */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 z-50 w-[240px] bg-[#0c0d12] border border-zinc-800 rounded-xl p-2 shadow-2xl flex flex-col gap-1.5 text-left"
+                      >
+                        {/* Caixinha 1: Ticket Discord */}
+                        <a
+                          href="https://discord.com/channels/1513871610908770374/1530508179174195200"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setActiveBalloonProductId(null)}
+                          className="flex items-center gap-2.5 p-2 rounded-lg bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/25 text-white transition-colors cursor-pointer"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-[#5865F2]/20 flex items-center justify-center text-[#5865F2] shrink-0">
+                            <DiscordIcon className="w-4 h-4 fill-current" />
+                          </div>
+                          <span className="font-semibold text-xs text-zinc-100">
+                            Ticket Discord
+                          </span>
+                          <ArrowUpRight className="w-3.5 h-3.5 ml-auto text-zinc-400" />
+                        </a>
+
+                        {/* Caixinha 2: Webticket */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveBalloonProductId(null);
+                            if (onNavigateTab) {
+                              onNavigateTab('support');
+                            }
+                          }}
+                          className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white transition-colors cursor-pointer text-left"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0">
+                            <MessageSquare className="w-4 h-4" />
+                          </div>
+                          <span className="font-semibold text-xs text-zinc-100">
+                            Webticket
+                          </span>
+                          <ArrowUpRight className="w-3.5 h-3.5 ml-auto text-zinc-400" />
+                        </button>
+
+                        {/* Ponteiro discreto */}
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0c0d12] border-r border-b border-zinc-800 rotate-45 pointer-events-none" />
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveBalloonProductId(activeBalloonProductId === item.id ? null : item.id)}
+                  className="w-full py-3 px-4 rounded-xl bg-[#0d0e15] hover:bg-[#161722] active:bg-[#1c1e2b] text-white border border-zinc-800/90 font-medium text-sm transition-all duration-200 cursor-pointer shadow-sm flex items-center justify-center"
+                >
+                  {item.buttonText || 'Buy now'}
+                </button>
+              </div>
             </div>
           );
         })}
