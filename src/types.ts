@@ -171,6 +171,7 @@ export interface RegisteredUser {
   id: string;
   name: string;
   email: string;
+  password?: string;
   discordUsername: string;
   role: SiteRole;
   createdAt: string;

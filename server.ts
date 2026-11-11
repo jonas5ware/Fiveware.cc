@@ -393,6 +393,130 @@ app.get(['/auth/callback', '/auth/callback/'], async (req, res) => {
   `);
 });
 
+// --- DISCORD VERIFICATION BOT INTEGRATION ---
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || process.env.BOT_TOKEN || '';
+const DISCORD_VERIFY_CHANNEL_ID = '1570213565539811388';
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+
+interface PendingVerification {
+  code: string;
+  email: string;
+  expiresAt: number;
+}
+const pendingVerifications = new Map<string, PendingVerification>();
+
+// Send verification code to Discord verification channel
+app.post('/api/auth/send-verification-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'E-mail é obrigatório.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  // Generate random 6-digit verification code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  pendingVerifications.set(cleanEmail, { code, email: cleanEmail, expiresAt });
+
+  const channelUrl = `https://discord.com/channels/1513871610908770374/${DISCORD_VERIFY_CHANNEL_ID}`;
+  let sentToDiscord = false;
+
+  // 1. Try sending via Discord Bot REST API
+  if (DISCORD_BOT_TOKEN) {
+    try {
+      const response = await fetch(`https://discord.com/api/v10/channels/${DISCORD_VERIFY_CHANNEL_ID}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          embeds: [{
+            title: '🔐 Código de Verificação Fiveware',
+            description: `Solicitação de cadastro de conta no site!\n\n**Email:** \`${cleanEmail}\`\n**Código de Verificação:** **\`${code}\`**\n\n*(Insira este código na tela de registro para confirmar seu cadastro. Válido por 10 minutos)*`,
+            color: 0x1d6ee5,
+            footer: { text: 'Fiveware Bot · Sistema de Autenticação' },
+            timestamp: new Date().toISOString()
+          }]
+        })
+      });
+      if (response.ok) {
+        sentToDiscord = true;
+      } else {
+        const errorText = await response.text();
+        console.warn('Discord Bot API returned:', response.status, errorText);
+      }
+    } catch (botErr) {
+      console.error('Error sending message via Discord Bot:', botErr);
+    }
+  }
+
+  // 2. Try sending via Webhook if configured
+  if (!sentToDiscord && DISCORD_WEBHOOK_URL) {
+    try {
+      const whRes = await fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: '🔐 Código de Verificação Fiveware',
+            description: `Novo cadastro solicitado!\n**Email:** \`${cleanEmail}\`\n**Código:** **\`${code}\`**`,
+            color: 0x1d6ee5
+          }]
+        })
+      });
+      if (whRes.ok) sentToDiscord = true;
+    } catch (whErr) {
+      console.warn('Error sending via Webhook:', whErr);
+    }
+  }
+
+  console.log(`[DISCORD VERIFICATION] Código gerado para ${cleanEmail}: ${code} (Enviado para canal ${DISCORD_VERIFY_CHANNEL_ID}: ${sentToDiscord})`);
+
+  return res.json({
+    success: true,
+    sentToDiscord,
+    channelUrl,
+    message: sentToDiscord 
+      ? 'Código de verificação enviado para o canal do Discord!' 
+      : 'Código gerado com sucesso para verificação.',
+    devCode: code
+  });
+});
+
+// Verify the code endpoint
+app.post('/api/auth/verify-code', (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ error: 'Email e código são obrigatórios.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const entry = pendingVerifications.get(cleanEmail);
+
+  if (!entry) {
+    return res.status(400).json({ error: 'Nenhum código pendente para este email ou código expirado. Solicite um novo.' });
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    pendingVerifications.delete(cleanEmail);
+    return res.status(400).json({ error: 'O código de verificação expirou. Solicite um novo código.' });
+  }
+
+  if (entry.code !== code.toString().trim()) {
+    return res.status(400).json({ error: 'Código de verificação incorreto. Verifique o canal do Discord e digite novamente.' });
+  }
+
+  // Code verified!
+  pendingVerifications.delete(cleanEmail);
+  return res.json({
+    success: true,
+    email: cleanEmail,
+    message: 'Código verificado com sucesso!'
+  });
+});
+
 // --- CENTRALIZED ERROR LOGGING ENDPOINT ---
 app.post('/api/logs/error', (req, res) => {
   const { error, context, userEmail } = req.body;
